@@ -1,8 +1,19 @@
 
+using Microsoft.EntityFrameworkCore;
+using NoPorn.Mvc.Models;
+using NoPorn.Mvc.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddRazorRuntimeCompilation();
+
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite("Data Source=./noporn.db"));
+#region Repositories
+builder.Services.AddScoped<IGirlRepository, GirlRepository>();
+builder.Services.AddScoped<IImageRepository, ImageRepository>();
+#endregion
 
 var app = builder.Build();
 

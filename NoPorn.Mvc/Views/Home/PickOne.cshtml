@@ -1,0 +1,26 @@
+﻿@model string
+@{
+    ViewData["Title"] = "Pick One";
+}
+
+<h1>PickOne</h1>
+<div x-data="girls">
+<button @@click="logValues()">logValues</button>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        debugger
+        console.log('alpine:init');
+        var pickOneViewModel = @Html.Raw(Model);
+        Alpine.data('girls', () => ({
+            //pickOneViewModel: @Html.Raw(Model),
+            firstGirl: pickOneViewModel.firstGirl,
+            secondGirl: pickOneViewModel.secondGirl,
+            logValues() {
+                console.log(this.firstGirl);
+                console.log(this.secondGirl);
+            }
+        }));
+    });
+</script>
