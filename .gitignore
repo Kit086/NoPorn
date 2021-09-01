@@ -7,6 +7,7 @@
 .vscode/
 .idea/
 *.db
+wwwroot/images/
 
 
 # User-specific files
