@@ -19,8 +19,27 @@ public class GirlRepository : IGirlRepository
 
     public async Task<Girl> GetGirlAsync(int id)
     {
-        var girls = await _dbContext.Girls.Include(g => g.Images).SingleOrDefaultAsync(g => g.Id == id);
+        var girl = await _dbContext.Girls.Include(g => g.Images).SingleOrDefaultAsync(g => g.Id == id);
         // var images = await _dbContext.Images.Where(i => i.GirlId == id).Select(i => i).ToListAsync();
+        return girl;
+    }
+    public async Task<List<Girl>> GetAllGirlsAsync()
+    {
+        var girls = await _dbContext.Girls.ToListAsync();
         return girls;
+    }
+
+    public async Task<Girl> CreateGirlAsync(Girl girl)
+    {
+        var createdGirl = await _dbContext.Girls.AddAsync(girl);
+        await _dbContext.SaveChangesAsync();
+        return createdGirl.Entity;
+    }
+
+    public async Task<Girl> UpdateGirlAsync(Girl girl)
+    {
+        var updatedGirl =_dbContext.Girls.Attach(girl);
+        await _dbContext.SaveChangesAsync();
+        return updatedGirl.Entity;
     }
 }
