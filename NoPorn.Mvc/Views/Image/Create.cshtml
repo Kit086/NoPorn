@@ -1,0 +1,14 @@
+﻿@model ImageCreateViewModel
+@{
+    ViewData["Title"] = "Image Create Page";
+}
+<h1>Image Create Page</h1>
+<form enctype="multipart/form-data" asp-controller="Image" asp-action="Create" method="post">
+    <div asp-validation-summary="All" class="text-red-400"></div>
+    <div>
+        <input hidden asp-for="GirlId" value="@ViewBag.GirlId"/>
+        图片:
+        <input asp-for="Images" multiple />
+        <button type="submit">添加</button>
+    </div>
+</form>

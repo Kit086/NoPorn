@@ -7,10 +7,10 @@
     @*TODO: 输入 姓名 头像*@
     <form enctype="multipart/form-data" asp-controller="Girl" asp-action="Create" method="post">
         <div asp-validation-summary="All" class="text-red-400"></div>
-        <label asp-for="Name"></label>
-        <input asp-for="Name" />
-        <label asp-for="Avatar"></label>
-        <input asp-for="Avatar" />
+        @*<label asp-for="Name"></label>*@
+        姓名: <input asp-for="Name" />
+        @*<label asp-for="Avatar"></label>*@
+        头像: <input asp-for="Avatar" />
         <button type="submit">创建</button>
 
     </form>

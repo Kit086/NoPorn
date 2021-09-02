@@ -1,22 +1,34 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using NoPorn.Mvc.ApplicationService;
 using NoPorn.Mvc.Models;
 using NoPorn.Mvc.Repositories;
 
 namespace NoPorn.Mvc.Controllers;
 public class GirlController : Controller
 {
+    private readonly ILogger<GirlController> _logger;
     private readonly IConfiguration _configuration;
     private readonly IGirlRepository _girlRepository;
+    private readonly IImageAppService _imageAppService;
 
-    public GirlController(IConfiguration configuration, IGirlRepository girlRepository)
+    public GirlController(ILogger<GirlController> logger, 
+        IConfiguration configuration, 
+        IGirlRepository girlRepository,
+        IImageAppService imageAppService)
     {
+        _logger = logger;
         _configuration = configuration;
         _girlRepository = girlRepository;
+        _imageAppService = imageAppService;
     }
     // GET: GirlController
     public async Task<IActionResult> Index()
     {
         var girls = await _girlRepository.GetAllGirlsAsync();
+        foreach (var girl in girls)
+        {
+            girl.AvatarUrl = _configuration["Url"] + girl.AvatarUrl;
+        }
         return View(girls);
     }
 
@@ -25,6 +37,10 @@ public class GirlController : Controller
     {
         var girl = await _girlRepository.GetGirlAsync(id);
         girl.AvatarUrl = _configuration["Url"] + girl.AvatarUrl;
+        foreach (var image in girl.Images)
+        {
+            image.Url = _configuration["Url"] + image.Url;
+        }
         return View(girl);
     }
 
@@ -40,6 +56,10 @@ public class GirlController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(GirlCreateViewModel girlCreateViewModel, [FromServices] IWebHostEnvironment webHostEnvironment)
     {
+        if (!ModelState.IsValid)
+        {
+            return View(girlCreateViewModel);
+        }
         try
         {
             var newGirl = new Girl
@@ -50,29 +70,15 @@ public class GirlController : Controller
                 IsDeleted = false
             };
             var createdGirl = await _girlRepository.CreateGirlAsync(newGirl);
-            var folderRelativePath = $"images/{createdGirl.Id}";
-            var folderAbsolutePath = Path.Combine(webHostEnvironment.WebRootPath, folderRelativePath);
-            if (!Directory.Exists(folderAbsolutePath))
-            {
-                Directory.CreateDirectory(folderAbsolutePath);
-            }
-
-            // var avatarFileName = Path.GetRandomFileName();
-            var avatarFileName = $"{Guid.NewGuid()}_{girlCreateViewModel.Avatar.FileName}";
-
-            var fileRelativePath = $"{folderRelativePath}/{avatarFileName}";
-            var fileAbsolutePath = $"{folderAbsolutePath}/{avatarFileName}";
-            using var stream = System.IO.File.Create(fileAbsolutePath);
-            await girlCreateViewModel.Avatar.CopyToAsync(stream);
-
-            createdGirl.AvatarUrl = fileRelativePath;
+            createdGirl.AvatarUrl = await _imageAppService.UploadImageForGirlAsync(createdGirl.Id, webHostEnvironment.WebRootPath, girlCreateViewModel.Avatar);
             await _girlRepository.UpdateGirlAsync(createdGirl);
             // updatedGirl.AvatarUrl = _configuration["Url"] + updatedGirl.AvatarUrl;
             return RedirectToAction("Details", "Girl", new { Id = createdGirl.Id });
         }
-        catch
+        catch (Exception e)
         {
-            return View();
+            _logger.LogError(e, "Failed to create Girl.");
+            return View("Error", new ErrorViewModel { ErrorMessage = e.Message });
         }
     }
 

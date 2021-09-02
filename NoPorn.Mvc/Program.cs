@@ -1,7 +1,10 @@
 
 using Microsoft.EntityFrameworkCore;
+using NoPorn.Mvc.ApplicationHelper;
+using NoPorn.Mvc.ApplicationService;
 using NoPorn.Mvc.Models;
 using NoPorn.Mvc.Repositories;
+using NoPorn.Mvc.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,13 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite("Data Source=./
 builder.Services.AddScoped<IGirlRepository, GirlRepository>();
 builder.Services.AddScoped<IImageRepository, ImageRepository>();
 #endregion
+#region Services
+builder.Services.AddScoped<IImageService, ImageService>();
+#endregion
+#region ApplicationServices
+builder.Services.AddScoped<IImageAppService, ImageAppService>();
+#endregion
+
 
 var app = builder.Build();
 

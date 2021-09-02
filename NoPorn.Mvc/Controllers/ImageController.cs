@@ -1,8 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using NoPorn.Mvc.ApplicationService;
+using NoPorn.Mvc.Models;
+using NoPorn.Mvc.Repositories;
 
 namespace NoPorn.Mvc.Controllers;
 public class ImageController : Controller
 {
+    private readonly ILogger<ImageController> _logger;
+    private readonly IImageAppService _imageAppService;
+    private readonly IGirlRepository _girlRepository;
+    private readonly IImageRepository _imageRepository;
+
+    public ImageController(ILogger<ImageController> logger,
+        IImageAppService imageAppService,
+        IGirlRepository girlRepository,
+        IImageRepository imageRepository)
+    {
+        _logger = logger;
+        _imageAppService = imageAppService;
+        _girlRepository = girlRepository;
+        _imageRepository = imageRepository;
+    }
     // GET: ImageController
     public ActionResult Index()
     {
@@ -16,23 +34,50 @@ public class ImageController : Controller
     }
 
     // GET: ImageController/Create
-    public ActionResult Create()
+    public ActionResult Create(int girlId)
     {
+        ViewBag.GirlId = girlId;
         return View();
     }
 
     // POST: ImageController/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public ActionResult Create(IFormCollection collection)
+    public async Task<ActionResult> Create(ImageCreateViewModel imageCreateViewModel, [FromServices] IWebHostEnvironment webHostEnvironment)
     {
+        if (!ModelState.IsValid)
+        {
+            return View(imageCreateViewModel);
+        }
         try
         {
-            return RedirectToAction(nameof(Index));
+            var girl = await _girlRepository.GetGirlAsync(imageCreateViewModel.GirlId);
+            if (girl is null)
+            {
+                throw new Exception($"不存在 Id 为 {imageCreateViewModel.GirlId} 的 Girl.");
+            }
+            var imageUrlList = await _imageAppService.UploadImagesForGirlAsync(girl.Id, webHostEnvironment.WebRootPath, imageCreateViewModel.Images);
+            var imageList = new List<Image>();
+            foreach (var url in imageUrlList)
+            {
+                var image = new Image
+                {
+                    Url = url,
+                    GirlId = girl.Id,
+                    Girl = girl,
+                    CreatedAt = DateTime.Now,
+                    ModifiedAt = DateTime.Now,
+                    IsDeleted = false
+                };
+                imageList.Add(image);
+            }
+            await _imageRepository.CreateImagesAsync(imageList);
+            return RedirectToAction("Details", "Girl", new { Id = girl.Id });
         }
-        catch
+        catch (Exception e)
         {
-            return View();
+            _logger.LogError(e, "Failed to create Image.");
+            return View("Error", new ErrorViewModel { ErrorMessage = e.Message });
         }
     }
 

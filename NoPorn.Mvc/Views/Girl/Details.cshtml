@@ -4,7 +4,14 @@
 }
 
 <div>
+    <button><a asp-controller="Image" asp-action="Create" asp-route-girlId="@Model.Id">添加图片</a></button>
     <label>@Model.Name</label>
     <img src="@Model.AvatarUrl" />
+
+    @foreach(var image in @Model.Images)
+    {
+        <img src="@image.Url" />
+    }
+        
 </div>
 

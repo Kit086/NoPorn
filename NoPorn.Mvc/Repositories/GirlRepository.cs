@@ -31,15 +31,15 @@ public class GirlRepository : IGirlRepository
 
     public async Task<Girl> CreateGirlAsync(Girl girl)
     {
-        var createdGirl = await _dbContext.Girls.AddAsync(girl);
+        var createdGirl = (await _dbContext.Girls.AddAsync(girl)).Entity;
         await _dbContext.SaveChangesAsync();
-        return createdGirl.Entity;
+        return createdGirl;
     }
 
     public async Task<Girl> UpdateGirlAsync(Girl girl)
     {
-        var updatedGirl =_dbContext.Girls.Attach(girl);
+        var updatedGirl = (_dbContext.Girls.Attach(girl)).Entity;
         await _dbContext.SaveChangesAsync();
-        return updatedGirl.Entity;
+        return updatedGirl;
     }
 }
